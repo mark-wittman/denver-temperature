@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denver Temperature Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="data.js"></script>
+<style>
+:root {
+  --bg-deep: #0B1220;
+  --bg-card: #111D2E;
+  --bg-card-hover: #162538;
+  --border: #1E3048;
+  --text-primary: #E8EDF3;
+  --text-secondary: #8899AE;
+  --text-muted: #556677;
+  --warm: #F97316;
+  --warm-dim: rgba(249, 115, 22, 0.15);
+  --cool: #60A5FA;
+  --cool-dim: rgba(96, 165, 250, 0.15);
+  --hot: #EF4444;
+  --hot-dim: rgba(239, 68, 68, 0.15);
+  --cold: #38BDF8;
+  --cold-dim: rgba(56, 189, 248, 0.15);
+  --green: #4ADE80;
+  --green-dim: rgba(74, 222, 128, 0.12);
+  --envelope-high-outer: rgba(249, 115, 22, 0.06);
+  --envelope-high-inner: rgba(249, 115, 22, 0.12);
+  --envelope-low-outer: rgba(96, 165, 250, 0.06);
+  --envelope-low-inner: rgba(96, 165, 250, 0.12);
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(249,115,22,0.008) 1deg, transparent 2deg) 0 0 / 400px 400px,
+    radial-gradient(ellipse at 20% 0%, rgba(249,115,22,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(96,165,250,0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+header {
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+header h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.8rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--warm) 0%, var(--text-primary) 50%, var(--cool) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.header-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  text-align: right;
+}
+
+.header-meta span { color: var(--text-secondary); }
+
+.year-badge {
+  display: inline-block;
+  background: var(--warm-dim);
+  color: var(--warm);
+  padding: 0.25rem 0.75rem;
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+/* Hero Cards */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.hero-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+.hero-card:hover { background: var(--bg-card-hover); }
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.hero-card.latest-high::before { background: var(--warm); }
+.hero-card.ytd-avg::before { background: var(--cool); }
+.hero-card.hottest::before { background: var(--hot); }
+.hero-card.freezing::before { background: var(--cold); }
+
+.hero-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.hero-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.8rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.hero-card.latest-high .hero-value { color: var(--warm); }
+.hero-card.ytd-avg .hero-value { color: var(--cool); }
+.hero-card.hottest .hero-value { color: var(--hot); }
+.hero-card.freezing .hero-value { color: var(--cold); }
+
+.hero-unit {
+  font-size: 1.4rem;
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.hero-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 0.4rem;
+}
+
+/* Main Chart Section */
+.chart-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chart-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chart-controls label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-controls input[type="checkbox"] {
+  accent-color: var(--warm);
+  width: 14px;
+  height: 14px;
+}
+
+.year-select {
+  background: var(--bg-deep);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  max-width: 200px;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 420px;
+}
+
+/* Analysis Grid */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.panel-chart-wrapper {
+  height: 280px;
+}
+
+/* Monthly Table */
+.table-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.month-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.month-table th {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.month-table th:not(:first-child) { text-align: right; }
+
+.month-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(30, 48, 72, 0.5);
+  color: var(--text-secondary);
+}
+
+.month-table td:not(:first-child) {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.month-table td:first-child {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.month-table tr:last-child td { border-bottom: none; }
+
+.month-table tr:hover td { background: rgba(249, 115, 22, 0.03); }
+
+.dep-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.dep-badge.hot { background: var(--hot-dim); color: var(--hot); }
+.dep-badge.warm { background: var(--warm-dim); color: var(--warm); }
+.dep-badge.cool { background: var(--cool-dim); color: var(--cool); }
+.dep-badge.cold { background: var(--cold-dim); color: var(--cold); }
+.dep-badge.neutral { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+
+/* Footer */
+footer {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+/* View toggle buttons */
+.view-toggle {
+  display: inline-flex;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.view-toggle button:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.view-toggle button.active {
+  background: var(--warm-dim);
+  color: var(--warm);
+}
+
+.view-toggle button:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+.reset-zoom-btn {
+  display: none;
+  background: var(--warm-dim);
+  color: var(--warm);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+.reset-zoom-btn:hover {
+  background: rgba(249, 115, 22, 0.25);
+}
+.reset-zoom-btn.visible {
+  display: inline-block;
+}
+
+.zoom-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 0.35rem;
+  text-align: center;
+}
+
+/* Legend overrides */
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.legend-swatch {
+  width: 18px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.legend-swatch.dashed {
+  background: repeating-linear-gradient(90deg, currentColor 0px, currentColor 4px, transparent 4px, transparent 8px);
+  height: 2px;
+}
+
+.legend-swatch-area {
+  width: 18px;
+  height: 10px;
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: repeat(2, 1fr); }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .hero-value { font-size: 2.2rem; }
+  header h1 { font-size: 2rem; }
+}
+
+@media (max-width: 500px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .container { padding: 1rem; }
+  .chart-wrapper { height: 300px; }
+  .panel-chart-wrapper { height: 220px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="year-badge"><span id="year-label"></span></div>
+    <div class="header-row">
+      <h1>Denver Temperature</h1>
+      <div class="header-meta">
+        Denver, CO (39.74&deg;N, 104.99&deg;W)<br>
+        Data fetched: <span id="fetch-time"></span>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero-grid" id="hero-cards"></section>
+
+  <section class="chart-section">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title" id="chart-title">Daily Temperature Range (Jan - Dec)</div>
+      </div>
+      <div class="chart-controls">
+        <div class="view-toggle">
+          <button class="active" id="btn-range" onclick="setChartView('range')">High/Low Range</button>
+          <button id="btn-highs" onclick="setChartView('highs')">Highs Only</button>
+          <button id="btn-lows" onclick="setChartView('lows')">Lows Only</button>
+        </div>
+        <button class="reset-zoom-btn" id="reset-zoom" onclick="resetChartZoom()">Reset Zoom</button>
+        <label>
+          <input type="checkbox" id="toggle-history">
+          Show historical years
+        </label>
+        <select id="year-select" class="year-select" multiple style="display:none;" size="5"></select>
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="temp-chart"></canvas>
+    </div>
+    <div class="zoom-hint">Click and drag to zoom &middot; Double-click to reset</div>
+    <div class="legend-row" id="chart-legend"></div>
+  </section>
+
+  <section class="analysis-grid">
+    <div class="panel">
+      <div class="panel-title">Monthly Averages</div>
+      <div class="panel-chart-wrapper">
+        <canvas id="monthly-chart"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Temperature Anomaly</div>
+      <div class="panel-chart-wrapper">
+        <canvas id="anomaly-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-section">
+    <div class="panel-title">Monthly Breakdown</div>
+    <table class="month-table">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Avg High</th>
+          <th>Avg Low</th>
+          <th>Normal High</th>
+          <th>Normal Low</th>
+          <th>Departure</th>
+          <th>Record High</th>
+          <th>Record Low</th>
+        </tr>
+      </thead>
+      <tbody id="month-tbody"></tbody>
+    </table>
+  </section>
+
+  <footer>
+    Temperature data: <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a> |
+    Location: Denver, CO (39.7392&deg;N, 104.9903&deg;W, 5,280 ft) |
+    Baseline: 30-year normals (1996-2025) |
+    Trailing average: 10-year (2016-2025)
+  </footer>
+</div>
+
+<script>
+// ============================================================
+// Dashboard Initialization
+// ============================================================
+
+const S = DATA.summary;
+const YEAR = DATA.year;
+
+// -- Header --
+document.getElementById('year-label').textContent = YEAR;
+document.getElementById('fetch-time').textContent = new Date(DATA.generated_at).toLocaleDateString('en-US', {
+  month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+});
+
+// -- Helper: format date string --
+function fmtDate(dateStr) {
+  if (!dateStr) return '--';
+  const d = new Date(dateStr + 'T12:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// -- Hero Cards --
+const ytdDep = S.ytd_avg_high != null && S.ytd_normal_avg_high != null
+  ? (S.ytd_avg_high - S.ytd_normal_avg_high).toFixed(1) : null;
+const ytdDepStr = ytdDep != null ? (ytdDep >= 0 ? `+${ytdDep}` : ytdDep) + '°F vs normal' : '';
+
+const heroHTML = [
+  { cls: 'latest-high', label: 'Latest High', value: S.today_high != null ? S.today_high.toFixed(0) : '--', unit: '°F', sub: `${fmtDate(S.today_date)} — Low ${S.today_low != null ? S.today_low.toFixed(0) + '°F' : '--'}` },
+  { cls: 'ytd-avg', label: 'YTD Avg High', value: S.ytd_avg_high != null ? S.ytd_avg_high.toFixed(1) : '--', unit: '°F', sub: ytdDepStr },
+  { cls: 'hottest', label: 'Hottest Day', value: S.hottest_day.temp != null ? S.hottest_day.temp.toFixed(0) : '--', unit: '°F', sub: S.hottest_day.date ? fmtDate(S.hottest_day.date) : '' },
+  { cls: 'freezing', label: 'Days Below Freezing', value: S.days_below_freezing, unit: '', sub: `Low &le; 32°F this year` },
+].map(c => `
+  <div class="hero-card ${c.cls}">
+    <div class="hero-label">${c.label}</div>
+    <div class="hero-value">${c.value}<span class="hero-unit">${c.unit}</span></div>
+    <div class="hero-sub">${c.sub}</div>
+  </div>
+`).join('');
+document.getElementById('hero-cards').innerHTML = heroHTML;
+
+// ============================================================
+// Helper: Convert MM-DD reference data to current-year date points
+// ============================================================
+
+function mdToDateStr(md) {
+  // MM-DD -> YYYY-MM-DD using current year
+  return `${YEAR}-${md}`;
+}
+
+function buildPoints(mdDates, values) {
+  return mdDates.map((md, i) => {
+    if (values[i] == null) return null;
+    return { x: mdToDateStr(md), y: values[i] };
+  }).filter(Boolean);
+}
+
+// ============================================================
+// Main Temperature Chart
+// ============================================================
+
+let currentView = 'range';
+
+function buildMainChart() {
+  const ctx = document.getElementById('temp-chart').getContext('2d');
+
+  // Current year data points
+  const currentHighPts = DATA.current_year.dates.map((d, i) =>
+    DATA.current_year.high[i] != null ? { x: d, y: DATA.current_year.high[i] } : null
+  ).filter(Boolean);
+  const currentLowPts = DATA.current_year.dates.map((d, i) =>
+    DATA.current_year.low[i] != null ? { x: d, y: DATA.current_year.low[i] } : null
+  ).filter(Boolean);
+
+  // Trailing average
+  const trailHighPts = buildPoints(DATA.trailing_avg.dates, DATA.trailing_avg.high);
+  const trailLowPts = buildPoints(DATA.trailing_avg.dates, DATA.trailing_avg.low);
+
+  // Envelope
+  const envP90High = buildPoints(DATA.historical_envelope.dates, DATA.historical_envelope.p90_high);
+  const envP10High = buildPoints(DATA.historical_envelope.dates, DATA.historical_envelope.p10_high);
+  const envP90Low = buildPoints(DATA.historical_envelope.dates, DATA.historical_envelope.p90_low);
+  const envP10Low = buildPoints(DATA.historical_envelope.dates, DATA.historical_envelope.p10_low);
+
+  const showHighs = currentView === 'range' || currentView === 'highs';
+  const showLows = currentView === 'range' || currentView === 'lows';
+
+  const datasets = [];
+
+  // High envelope (p10-p90)
+  if (showHighs) {
+    datasets.push({
+      label: 'p90_high',
+      data: envP90High,
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      fill: false,
+      pointRadius: 0,
+      order: 10,
+    });
+    datasets.push({
+      label: 'High 10th-90th Pctl',
+      data: envP10High,
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(249, 115, 22, 0.07)',
+      fill: '-1',
+      pointRadius: 0,
+      order: 9,
+    });
+  }
+
+  // Low envelope (p10-p90)
+  if (showLows) {
+    datasets.push({
+      label: 'p90_low',
+      data: envP90Low,
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      fill: false,
+      pointRadius: 0,
+      order: 10,
+    });
+    datasets.push({
+      label: 'Low 10th-90th Pctl',
+      data: envP10Low,
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(96, 165, 250, 0.07)',
+      fill: '-1',
+      pointRadius: 0,
+      order: 9,
+    });
+  }
+
+  // Trailing average lines
+  if (showHighs) {
+    datasets.push({
+      label: '10-Yr Avg High',
+      data: trailHighPts,
+      borderColor: 'rgba(249, 115, 22, 0.35)',
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      fill: false,
+      pointRadius: 0,
+      tension: 0.3,
+      order: 5,
+    });
+  }
+  if (showLows) {
+    datasets.push({
+      label: '10-Yr Avg Low',
+      data: trailLowPts,
+      borderColor: 'rgba(96, 165, 250, 0.35)',
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      fill: false,
+      pointRadius: 0,
+      tension: 0.3,
+      order: 5,
+    });
+  }
+
+  // Current year high line
+  if (showHighs) {
+    datasets.push({
+      label: `${YEAR} High`,
+      data: currentHighPts,
+      borderColor: '#F97316',
+      borderWidth: 2,
+      fill: showLows ? false : false,
+      pointRadius: 0,
+      tension: 0.15,
+      order: 1,
+    });
+  }
+
+  // Current year low line
+  if (showLows) {
+    datasets.push({
+      label: `${YEAR} Low`,
+      data: currentLowPts,
+      borderColor: '#60A5FA',
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 0,
+      tension: 0.15,
+      order: 2,
+    });
+  }
+
+  // Fill between high and low in range mode
+  if (currentView === 'range' && datasets.length >= 2) {
+    // Find the high dataset index and low dataset index
+    const highIdx = datasets.findIndex(d => d.label === `${YEAR} High`);
+    const lowIdx = datasets.findIndex(d => d.label === `${YEAR} Low`);
+    if (highIdx >= 0 && lowIdx >= 0) {
+      datasets[lowIdx].fill = {
+        target: highIdx,
+        above: 'rgba(96, 165, 250, 0.08)',
+        below: 'rgba(249, 115, 22, 0.08)',
+      };
+    }
+  }
+
+  window.tempChart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'month',
+            displayFormats: { month: 'MMM' },
+          },
+          min: `${YEAR}-01-01`,
+          max: `${YEAR}-12-31`,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 12 },
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Temperature (°F)',
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 12 },
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 12 },
+          },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111D2E',
+          borderColor: '#1E3048',
+          borderWidth: 1,
+          titleColor: '#E8EDF3',
+          bodyColor: '#8899AE',
+          titleFont: { family: 'Barlow Condensed', weight: '600' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 12,
+          displayColors: true,
+          filter: (item) => !['p90_high', 'p90_low', 'High 10th-90th Pctl', 'Low 10th-90th Pctl'].includes(item.dataset.label),
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            },
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}°F`,
+          },
+        },
+        zoom: {
+          pan: { enabled: false },
+          zoom: {
+            drag: {
+              enabled: true,
+              backgroundColor: 'rgba(249, 115, 22, 0.12)',
+              borderColor: 'rgba(249, 115, 22, 0.4)',
+              borderWidth: 1,
+            },
+            pinch: { enabled: true },
+            wheel: { enabled: false },
+            mode: 'x',
+            onZoomComplete: () => {
+              document.getElementById('reset-zoom').classList.add('visible');
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function resetChartZoom() {
+  if (window.tempChart) {
+    window.tempChart.resetZoom();
+    document.getElementById('reset-zoom').classList.remove('visible');
+  }
+}
+
+document.getElementById('temp-chart').addEventListener('dblclick', resetChartZoom);
+
+function updateLegend() {
+  const showHighs = currentView === 'range' || currentView === 'highs';
+  const showLows = currentView === 'range' || currentView === 'lows';
+  let html = '';
+  if (showHighs) {
+    html += `
+      <div class="legend-item"><span class="legend-swatch" style="background: var(--warm);"></span>${YEAR} Daily High</div>
+      <div class="legend-item"><span class="legend-swatch dashed" style="color: rgba(249,115,22,0.5);"></span>10-Year Avg High</div>
+      <div class="legend-item"><span class="legend-swatch-area" style="background: var(--warm);"></span>High 10th-90th Pctl</div>
+    `;
+  }
+  if (showLows) {
+    html += `
+      <div class="legend-item"><span class="legend-swatch" style="background: var(--cool);"></span>${YEAR} Daily Low</div>
+      <div class="legend-item"><span class="legend-swatch dashed" style="color: rgba(96,165,250,0.5);"></span>10-Year Avg Low</div>
+      <div class="legend-item"><span class="legend-swatch-area" style="background: var(--cool);"></span>Low 10th-90th Pctl</div>
+    `;
+  }
+  document.getElementById('chart-legend').innerHTML = html;
+}
+
+// View toggle
+function setChartView(view) {
+  if (view === currentView) return;
+  currentView = view;
+  document.getElementById('reset-zoom').classList.remove('visible');
+
+  document.getElementById('btn-range').classList.toggle('active', view === 'range');
+  document.getElementById('btn-highs').classList.toggle('active', view === 'highs');
+  document.getElementById('btn-lows').classList.toggle('active', view === 'lows');
+
+  if (window.tempChart) window.tempChart.destroy();
+
+  const titles = {
+    range: 'Daily Temperature Range (Jan - Dec)',
+    highs: 'Daily High Temperatures (Jan - Dec)',
+    lows: 'Daily Low Temperatures (Jan - Dec)',
+  };
+  document.getElementById('chart-title').textContent = titles[view];
+
+  buildMainChart();
+  updateHistoricalYears();
+  updateLegend();
+}
+
+// Historical year overlay
+const histToggle = document.getElementById('toggle-history');
+const yearSelect = document.getElementById('year-select');
+
+const years = Object.keys(DATA.historical_years).sort();
+years.forEach(yr => {
+  const opt = document.createElement('option');
+  opt.value = yr;
+  opt.textContent = yr;
+  if (['2012', '2020', '2023'].includes(yr)) opt.selected = true;
+  yearSelect.appendChild(opt);
+});
+
+const histColors = [
+  '#4B5563', '#6B7280', '#9CA3AF', '#374151', '#5C6370',
+  '#485563', '#6A737D', '#8B949E', '#3D4451', '#586069',
+  '#4B5E6D', '#5A6B7A', '#697C8B', '#3F5261', '#4E6170',
+  '#445566', '#556677', '#667788', '#384858', '#475868',
+];
+
+function updateHistoricalYears() {
+  if (!window.tempChart) return;
+  window.tempChart.data.datasets = window.tempChart.data.datasets.filter(ds => !ds._isHistorical);
+
+  if (histToggle.checked) {
+    yearSelect.style.display = 'block';
+    const selected = Array.from(yearSelect.selectedOptions).map(o => o.value);
+    const showHighs = currentView === 'range' || currentView === 'highs';
+    const showLows = currentView === 'range' || currentView === 'lows';
+    selected.forEach((yr, i) => {
+      const yd = DATA.historical_years[yr];
+      if (!yd) return;
+      const color = histColors[i % histColors.length];
+      if (showHighs) {
+        const pts = yd.dates.map((d, j) => {
+          // Remap to current year for alignment
+          const md = d.substring(5); // MM-DD
+          return yd.high[j] != null ? { x: `${YEAR}-${md}`, y: yd.high[j] } : null;
+        }).filter(Boolean);
+        window.tempChart.data.datasets.push({
+          label: `${yr} High`,
+          data: pts,
+          borderColor: color,
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.15,
+          order: 6,
+          _isHistorical: true,
+        });
+      }
+      if (showLows) {
+        const pts = yd.dates.map((d, j) => {
+          const md = d.substring(5);
+          return yd.low[j] != null ? { x: `${YEAR}-${md}`, y: yd.low[j] } : null;
+        }).filter(Boolean);
+        window.tempChart.data.datasets.push({
+          label: `${yr} Low`,
+          data: pts,
+          borderColor: color,
+          borderWidth: 1,
+          borderDash: [3, 3],
+          fill: false,
+          pointRadius: 0,
+          tension: 0.15,
+          order: 6,
+          _isHistorical: true,
+        });
+      }
+    });
+  } else {
+    yearSelect.style.display = 'none';
+  }
+  window.tempChart.update();
+}
+
+histToggle.addEventListener('change', updateHistoricalYears);
+yearSelect.addEventListener('change', updateHistoricalYears);
+
+// Build initial chart + legend
+buildMainChart();
+updateLegend();
+
+// ============================================================
+// Monthly Averages Chart (grouped bar)
+// ============================================================
+
+function buildMonthlyChart() {
+  const ctx = document.getElementById('monthly-chart').getContext('2d');
+  const months = Object.keys(DATA.monthly);
+  const labels = months.map(m => m.substring(0, 3));
+
+  const avgHighs = months.map(m => DATA.monthly[m].avg_high);
+  const avgLows = months.map(m => DATA.monthly[m].avg_low);
+  const normalHighs = months.map(m => DATA.monthly[m].normal_high);
+  const normalLows = months.map(m => DATA.monthly[m].normal_low);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `${YEAR} Avg High`,
+          data: avgHighs,
+          backgroundColor: 'rgba(249, 115, 22, 0.6)',
+          borderColor: 'rgba(249, 115, 22, 0.9)',
+          borderWidth: 1,
+          borderRadius: 2,
+        },
+        {
+          label: `${YEAR} Avg Low`,
+          data: avgLows,
+          backgroundColor: 'rgba(96, 165, 250, 0.6)',
+          borderColor: 'rgba(96, 165, 250, 0.9)',
+          borderWidth: 1,
+          borderRadius: 2,
+        },
+        {
+          label: 'Normal High',
+          data: normalHighs,
+          type: 'line',
+          borderColor: 'rgba(249, 115, 22, 0.5)',
+          borderWidth: 2,
+          borderDash: [4, 3],
+          pointBackgroundColor: '#F97316',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: false,
+          tension: 0.2,
+          order: 0,
+        },
+        {
+          label: 'Normal Low',
+          data: normalLows,
+          type: 'line',
+          borderColor: 'rgba(96, 165, 250, 0.5)',
+          borderWidth: 2,
+          borderDash: [4, 3],
+          pointBackgroundColor: '#60A5FA',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: false,
+          tension: 0.2,
+          order: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#8899AE',
+            font: { family: 'DM Sans', size: 10 },
+            boxWidth: 12,
+            padding: 8,
+          },
+          position: 'bottom',
+        },
+        tooltip: {
+          backgroundColor: '#111D2E',
+          borderColor: '#1E3048',
+          borderWidth: 1,
+          titleColor: '#E8EDF3',
+          bodyColor: '#8899AE',
+          titleFont: { family: 'Barlow Condensed', weight: '600' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 12,
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(1) + '°F' : 'N/A'}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 12 },
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Temperature (°F)',
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 11 },
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 11 },
+          },
+        },
+      },
+    },
+  });
+}
+
+buildMonthlyChart();
+
+// ============================================================
+// Temperature Anomaly Chart
+// ============================================================
+
+function buildAnomalyChart() {
+  const ctx = document.getElementById('anomaly-chart').getContext('2d');
+  const A = DATA.anomalies;
+
+  // Average of high and low departure for the combined anomaly bar
+  const avgDeparture = A.high_departure.map((h, i) => {
+    const l = A.low_departure[i];
+    return h != null && l != null ? round2((h + l) / 2) : null;
+  });
+
+  const barColors = avgDeparture.map(v =>
+    v == null ? 'transparent' :
+    v > 3 ? 'rgba(239, 68, 68, 0.7)' :
+    v > 0 ? 'rgba(249, 115, 22, 0.6)' :
+    v < -3 ? 'rgba(56, 189, 248, 0.7)' :
+    'rgba(96, 165, 250, 0.6)'
+  );
+  const borderColors = avgDeparture.map(v =>
+    v == null ? 'transparent' :
+    v > 0 ? 'rgba(249, 115, 22, 0.9)' :
+    'rgba(96, 165, 250, 0.9)'
+  );
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: A.months,
+      datasets: [
+        {
+          label: 'High Departure',
+          data: A.high_departure,
+          backgroundColor: A.high_departure.map(v =>
+            v == null ? 'transparent' : v >= 0 ? 'rgba(249, 115, 22, 0.6)' : 'rgba(96, 165, 250, 0.6)'
+          ),
+          borderColor: A.high_departure.map(v =>
+            v == null ? 'transparent' : v >= 0 ? 'rgba(249, 115, 22, 0.9)' : 'rgba(96, 165, 250, 0.9)'
+          ),
+          borderWidth: 1,
+          borderRadius: 2,
+        },
+        {
+          label: 'Low Departure',
+          data: A.low_departure,
+          backgroundColor: A.low_departure.map(v =>
+            v == null ? 'transparent' : v >= 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(56, 189, 248, 0.4)'
+          ),
+          borderColor: A.low_departure.map(v =>
+            v == null ? 'transparent' : v >= 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(56, 189, 248, 0.7)'
+          ),
+          borderWidth: 1,
+          borderRadius: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#8899AE',
+            font: { family: 'DM Sans', size: 10 },
+            boxWidth: 12,
+            padding: 8,
+          },
+          position: 'bottom',
+        },
+        tooltip: {
+          backgroundColor: '#111D2E',
+          borderColor: '#1E3048',
+          borderWidth: 1,
+          titleColor: '#E8EDF3',
+          bodyColor: '#8899AE',
+          titleFont: { family: 'Barlow Condensed', weight: '600' },
+          bodyFont: { family: 'DM Sans' },
+          padding: 12,
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed.y;
+              if (v == null) return '';
+              const sign = v >= 0 ? '+' : '';
+              return `${ctx.dataset.label}: ${sign}${v.toFixed(1)}°F`;
+            },
+          },
+        },
+        annotation: undefined,
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 12 },
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Departure from Normal (°F)',
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 11 },
+          },
+          grid: {
+            color: (ctx) => ctx.tick.value === 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.04)',
+            lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
+          },
+          ticks: {
+            color: '#556677',
+            font: { family: 'Barlow Condensed', size: 11 },
+            callback: (v) => (v >= 0 ? '+' : '') + v + '°',
+          },
+        },
+      },
+    },
+  });
+}
+
+function round2(n) { return Math.round(n * 100) / 100; }
+
+buildAnomalyChart();
+
+// ============================================================
+// Monthly Breakdown Table
+// ============================================================
+
+const MONTH_ORDER = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const monthRows = MONTH_ORDER.map(name => {
+  const m = DATA.monthly[name];
+  if (!m) return '';
+
+  const depHigh = m.departure_high;
+  const depLow = m.departure_low;
+
+  function depBadge(val) {
+    if (val == null) return '<span class="dep-badge neutral">--</span>';
+    const sign = val >= 0 ? '+' : '';
+    let cls = 'neutral';
+    if (val > 5) cls = 'hot';
+    else if (val > 0) cls = 'warm';
+    else if (val < -5) cls = 'cold';
+    else if (val < 0) cls = 'cool';
+    return `<span class="dep-badge ${cls}">${sign}${val.toFixed(1)}°F</span>`;
+  }
+
+  const avgDep = (depHigh != null && depLow != null) ? (depHigh + depLow) / 2 : null;
+
+  return `
+    <tr>
+      <td>${name}</td>
+      <td>${m.avg_high != null ? m.avg_high.toFixed(1) + '°F' : '--'}</td>
+      <td>${m.avg_low != null ? m.avg_low.toFixed(1) + '°F' : '--'}</td>
+      <td>${m.normal_high != null ? m.normal_high.toFixed(1) + '°F' : '--'}</td>
+      <td>${m.normal_low != null ? m.normal_low.toFixed(1) + '°F' : '--'}</td>
+      <td>${depBadge(avgDep)}</td>
+      <td>${m.record_high != null ? m.record_high.toFixed(0) + '°F (' + m.record_high_year + ')' : '--'}</td>
+      <td>${m.record_low != null ? m.record_low.toFixed(0) + '°F (' + m.record_low_year + ')' : '--'}</td>
+    </tr>
+  `;
+}).join('');
+
+document.getElementById('month-tbody').innerHTML = monthRows;
+
+</script>
+</body>
+</html>
