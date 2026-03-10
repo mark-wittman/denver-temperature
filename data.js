@@ -1,5 +1,5 @@
 const DATA = {
-  "generated_at": "2026-03-09T14:49:17",
+  "generated_at": "2026-03-10T14:45:36",
   "year": 2026,
   "location": {
     "name": "Denver, CO",
@@ -76,7 +76,8 @@ const DATA = {
       "2026-03-06",
       "2026-03-07",
       "2026-03-08",
-      "2026-03-09"
+      "2026-03-09",
+      "2026-03-10"
     ],
     "high": [
       57.7,
@@ -146,7 +147,8 @@ const DATA = {
       47.4,
       46.2,
       66.4,
-      70.7
+      70.7,
+      70.2
     ],
     "low": [
       32.8,
@@ -216,7 +218,8 @@ const DATA = {
       30.8,
       14.5,
       31.7,
-      33.7
+      32.6,
+      33.1
     ]
   },
   "trailing_avg": {
@@ -39623,7 +39626,7 @@ const DATA = {
       "departure_low": 13.8
     },
     "March": {
-      "avg_high": 60.8,
+      "avg_high": 61.7,
       "avg_low": 32.1,
       "normal_high": 52.1,
       "normal_low": 24.0,
@@ -39631,7 +39634,7 @@ const DATA = {
       "record_high_year": "2012",
       "record_low": -16.3,
       "record_low_year": "2002",
-      "departure_high": 8.7,
+      "departure_high": 9.6,
       "departure_low": 8.1
     },
     "April": {
@@ -39752,7 +39755,7 @@ const DATA = {
     "high_departure": [
       6.2,
       15.0,
-      8.7
+      9.6
     ],
     "low_departure": [
       7.8,
@@ -39761,11 +39764,11 @@ const DATA = {
     ]
   },
   "summary": {
-    "today_high": 70.7,
-    "today_low": 33.7,
-    "today_date": "2026-03-09",
-    "ytd_avg_high": 53.3,
-    "ytd_normal_avg_high": 42.7,
+    "today_high": 70.2,
+    "today_low": 33.1,
+    "today_date": "2026-03-10",
+    "ytd_avg_high": 53.5,
+    "ytd_normal_avg_high": 42.8,
     "hottest_day": {
       "date": "2026-03-09",
       "temp": 70.7
