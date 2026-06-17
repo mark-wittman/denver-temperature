@@ -1,5 +1,5 @@
 const DATA = {
-  "generated_at": "2026-06-16T18:32:13",
+  "generated_at": "2026-06-17T16:58:07",
   "year": 2026,
   "location": {
     "name": "Denver, CO",
@@ -175,7 +175,8 @@ const DATA = {
       "2026-06-13",
       "2026-06-14",
       "2026-06-15",
-      "2026-06-16"
+      "2026-06-16",
+      "2026-06-17"
     ],
     "high": [
       57.7,
@@ -344,7 +345,8 @@ const DATA = {
       80.5,
       70.1,
       81.4,
-      94.5
+      94.3,
+      98.3
     ],
     "low": [
       32.8,
@@ -513,7 +515,8 @@ const DATA = {
       60.3,
       54.1,
       54.5,
-      56.1
+      55.9,
+      65.9
     ]
   },
   "trailing_avg": {
@@ -39956,16 +39959,16 @@ const DATA = {
       "departure_low": 3.1
     },
     "June": {
-      "avg_high": 85.6,
-      "avg_low": 57.1,
+      "avg_high": 86.3,
+      "avg_low": 57.6,
       "normal_high": 81.1,
       "normal_low": 53.0,
       "record_high": 101.6,
       "record_high_year": "2025",
       "record_low": 34.7,
       "record_low_year": "1998",
-      "departure_high": 4.5,
-      "departure_low": 4.1
+      "departure_high": 5.2,
+      "departure_low": 4.6
     },
     "July": {
       "avg_high": null,
@@ -40055,7 +40058,7 @@ const DATA = {
       16.6,
       6.8,
       2.6,
-      4.5
+      5.2
     ],
     "low_departure": [
       7.8,
@@ -40063,24 +40066,24 @@ const DATA = {
       14.1,
       7.4,
       3.1,
-      4.1
+      4.6
     ]
   },
   "summary": {
-    "today_high": 94.5,
-    "today_low": 56.1,
-    "today_date": "2026-06-16",
-    "ytd_avg_high": 64.5,
-    "ytd_normal_avg_high": 55.4,
+    "today_high": 98.3,
+    "today_low": 65.9,
+    "today_date": "2026-06-17",
+    "ytd_avg_high": 64.7,
+    "ytd_normal_avg_high": 55.6,
     "hottest_day": {
-      "date": "2026-06-16",
-      "temp": 94.5
+      "date": "2026-06-17",
+      "temp": 98.3
     },
     "coldest_day": {
       "date": "2026-01-24",
       "temp": -2.7
     },
     "days_below_freezing": 54,
-    "days_above_90": 8
+    "days_above_90": 9
   }
 };
