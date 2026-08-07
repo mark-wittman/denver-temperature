@@ -1,5 +1,5 @@
 const DATA = {
-  "generated_at": "2026-08-05T16:01:45",
+  "generated_at": "2026-08-07T14:52:08",
   "year": 2026,
   "location": {
     "name": "Denver, CO",
@@ -225,7 +225,9 @@ const DATA = {
       "2026-08-02",
       "2026-08-03",
       "2026-08-04",
-      "2026-08-05"
+      "2026-08-05",
+      "2026-08-06",
+      "2026-08-07"
     ],
     "high": [
       57.7,
@@ -444,7 +446,9 @@ const DATA = {
       102.3,
       101.9,
       75.7,
-      86.5
+      84.7,
+      98.0,
+      98.4
     ],
     "low": [
       32.8,
@@ -663,7 +667,9 @@ const DATA = {
       65.3,
       69.5,
       57.3,
-      56.0
+      54.1,
+      60.0,
+      62.1
     ]
   },
   "trailing_avg": {
@@ -40130,16 +40136,16 @@ const DATA = {
       "departure_low": 5.9
     },
     "August": {
-      "avg_high": 92.2,
-      "avg_low": 61.9,
+      "avg_high": 93.7,
+      "avg_low": 61.4,
       "normal_high": 84.6,
       "normal_low": 58.1,
       "record_high": 100.9,
       "record_high_year": "2024",
       "record_low": 41.8,
       "record_low_year": "2004",
-      "departure_high": 7.6,
-      "departure_low": 3.8
+      "departure_high": 9.1,
+      "departure_low": 3.3
     },
     "September": {
       "avg_high": null,
@@ -40209,7 +40215,7 @@ const DATA = {
       2.7,
       5.8,
       7.8,
-      7.6
+      9.1
     ],
     "low_departure": [
       7.8,
@@ -40219,15 +40225,15 @@ const DATA = {
       3.1,
       5.9,
       5.9,
-      3.8
+      3.3
     ]
   },
   "summary": {
-    "today_high": 86.5,
-    "today_low": 56.0,
-    "today_date": "2026-08-05",
-    "ytd_avg_high": 71.0,
-    "ytd_normal_avg_high": 62.4,
+    "today_high": 98.4,
+    "today_low": 62.1,
+    "today_date": "2026-08-07",
+    "ytd_avg_high": 71.2,
+    "ytd_normal_avg_high": 62.6,
     "hottest_day": {
       "date": "2026-07-26",
       "temp": 103.6
@@ -40237,6 +40243,6 @@ const DATA = {
       "temp": -2.7
     },
     "days_below_freezing": 54,
-    "days_above_90": 42
+    "days_above_90": 44
   }
 };
