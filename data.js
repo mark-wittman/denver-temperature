@@ -1,5 +1,5 @@
 const DATA = {
-  "generated_at": "2026-11-22T20:36:21",
+  "generated_at": "2026-11-24T01:24:34",
   "year": 2026,
   "location": {
     "name": "Denver, CO",
@@ -334,7 +334,9 @@ const DATA = {
       "2026-11-19",
       "2026-11-20",
       "2026-11-21",
-      "2026-11-22"
+      "2026-11-22",
+      "2026-11-23",
+      "2026-11-24"
     ],
     "high": [
       57.8,
@@ -662,7 +664,9 @@ const DATA = {
       51.9,
       63.5,
       44.0,
-      42.6
+      43.5,
+      40.7,
+      51.5
     ],
     "low": [
       32.8,
@@ -990,7 +994,9 @@ const DATA = {
       28.9,
       36.1,
       31.0,
-      25.9
+      25.9,
+      27.9,
+      27.0
     ]
   },
   "trailing_avg": {
@@ -40493,16 +40499,16 @@ const DATA = {
       "departure_low": 10.1
     },
     "November": {
-      "avg_high": 59.4,
-      "avg_low": 35.6,
+      "avg_high": 58.4,
+      "avg_low": 34.9,
       "normal_high": 51.4,
       "normal_low": 24.8,
       "record_high": 80.6,
       "record_high_year": "2025",
       "record_low": -14.0,
       "record_low_year": "2006",
-      "departure_high": 8.0,
-      "departure_low": 10.8
+      "departure_high": 7.0,
+      "departure_low": 10.1
     },
     "December": {
       "avg_high": null,
@@ -40542,7 +40548,7 @@ const DATA = {
       6.9,
       5.3,
       8.5,
-      8.0
+      7.0
     ],
     "low_departure": [
       7.9,
@@ -40555,15 +40561,15 @@ const DATA = {
       4.2,
       7.7,
       10.1,
-      10.8
+      10.1
     ]
   },
   "summary": {
-    "today_high": 42.6,
-    "today_low": 25.9,
-    "today_date": "2026-11-22",
-    "ytd_avg_high": 73.1,
-    "ytd_normal_avg_high": 65.2,
+    "today_high": 51.5,
+    "today_low": 27.0,
+    "today_date": "2026-11-24",
+    "ytd_avg_high": 73.0,
+    "ytd_normal_avg_high": 65.1,
     "hottest_day": {
       "date": "2026-07-26",
       "temp": 103.6
@@ -40572,7 +40578,7 @@ const DATA = {
       "date": "2026-01-24",
       "temp": -3.0
     },
-    "days_below_freezing": 58,
+    "days_below_freezing": 60,
     "days_above_90": 68
   }
 };
